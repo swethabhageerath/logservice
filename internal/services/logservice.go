@@ -43,7 +43,7 @@ func (l LogService) Create(ctx context.Context, le models.LogEntryRequest) (mode
 
 	r, err := l.logRepositor.Create(ctx, logEntry)
 	if err != nil {
-		return models.LogEntryResponse{}, err
+		return models.LogEntryResponse{}, errors.Wrap(err, "")
 	}
 
 	logEntryResponse := models.LogEntryResponse{

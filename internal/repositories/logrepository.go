@@ -8,6 +8,7 @@ import (
 	"github.com/swethabhageerath/logging/lib/constants"
 	"github.com/swethabhageerath/logging/lib/logger"
 	"github.com/swethabhageerath/logservice/internal/dto"
+	"github.com/swethabhageerath/logservice/internal/exceptions"
 	"github.com/swethabhageerath/logservice/internal/models"
 )
 
@@ -34,19 +35,19 @@ func (l LogRepository) Create(ctx context.Context, le dto.LogEntry) (dto.LogEntr
 	result, err := l.da.ExecuteContext(ctx, query, le.AppName, le.RequestId, le.User, le.LogLevel, le.Message, le.Frames, le.Params, le.Details)
 	if err != nil {
 		l.logger.AddAppName("logservice").AddContext(ctx).AddDetails(models.LogDetail{PackageName: "Repositories", FileName: "LogRepository.go", Operation: "Create"}.String()).AddFrames(constants.ALL).AddMessage(err.Error()).Log()
-		return dto.LogEntry{}, err
+		return dto.LogEntry{}, exceptions.Exception{Err: errors.Wrap(err, err.Error()), StatusCode: 500}
 	}
 
 	lastRowInsertedId, err := result.LastInsertId()
 	if err != nil {
 		l.logger.AddAppName("logservice").AddContext(ctx).AddDetails(models.LogDetail{PackageName: "Repositories", FileName: "LogRepository.go", Operation: "Create"}.String()).AddFrames(constants.ALL).AddMessage(err.Error()).Log()
-		return dto.LogEntry{}, err
+		return dto.LogEntry{}, exceptions.Exception{Err: errors.Wrap(err, err.Error()), StatusCode: 500}
 	}
 
 	if lastRowInsertedId == 0 {
 		err := errors.New("An error occured while creating a log record")
 		l.logger.AddAppName("logservice").AddContext(ctx).AddDetails(models.LogDetail{PackageName: "Repositories", FileName: "LogRepository.go", Operation: "Create"}.String()).AddFrames(constants.ALL).AddMessage(err.Error()).Log()
-		return dto.LogEntry{}, err
+		return dto.LogEntry{}, exceptions.Exception{Err: errors.Wrap(err, err.Error()), StatusCode: 500}
 	}
 
 	return l.GetById(ctx, int(lastRowInsertedId))
@@ -59,7 +60,7 @@ func (l LogRepository) GetById(ctx context.Context, id int) (dto.LogEntry, error
 	err := row.Scan(&le.Id, &le.AppName, &le.RequestId, &le.User, &le.LogLevel, &le.Message, &le.Frames, &le.Params, &le.Details)
 	if err != nil {
 		l.logger.AddAppName("logservice").AddContext(ctx).AddDetails(models.LogDetail{PackageName: "Repositories", FileName: "LogRepository.go", Operation: "GetById"}.String()).AddFrames(constants.ALL).AddMessage(err.Error()).Log()
-		return dto.LogEntry{}, err
+		return dto.LogEntry{}, exceptions.Exception{Err: errors.Wrap(err, err.Error()), StatusCode: 500}
 	}
 	return le, nil
 }
@@ -85,7 +86,7 @@ func (l LogRepository) GetByLogLevel(ctx context.Context, logLevel string) ([]dt
 func (l LogRepository) get(row *sql.Rows, ctx context.Context, operation string, err error) ([]dto.LogEntry, error) {
 	if err != nil {
 		l.logger.AddAppName("logservice").AddContext(ctx).AddDetails(models.LogDetail{PackageName: "Repositories", FileName: "LogRepository.go", Operation: operation}.String()).AddFrames(constants.ALL).AddMessage(err.Error()).Log()
-		return nil, err
+		return nil, exceptions.Exception{Err: errors.Wrap(err, err.Error()), StatusCode: 500}
 	}
 
 	logEntries := make([]dto.LogEntry, 0)
@@ -95,7 +96,7 @@ func (l LogRepository) get(row *sql.Rows, ctx context.Context, operation string,
 		err := row.Scan(&le.Id, &le.AppName, &le.RequestId, &le.User, &le.LogLevel, &le.Message, &le.Frames, &le.Params, &le.Details)
 		if err != nil {
 			l.logger.AddAppName("logservice").AddContext(ctx).AddDetails(models.LogDetail{PackageName: "Repositories", FileName: "LogRepository.go", Operation: operation}.String()).AddFrames(constants.ALL).AddMessage(err.Error()).Log()
-			return nil, err
+			return nil, exceptions.Exception{Err: errors.Wrap(err, err.Error()), StatusCode: 500}
 		}
 		logEntries = append(logEntries, le)
 	}
@@ -103,7 +104,7 @@ func (l LogRepository) get(row *sql.Rows, ctx context.Context, operation string,
 	err = row.Err()
 	if err != nil {
 		l.logger.AddAppName("logservice").AddContext(ctx).AddDetails(models.LogDetail{PackageName: "Repositories", FileName: "LogRepository.go", Operation: operation}.String()).AddFrames(constants.ALL).AddMessage(err.Error()).Log()
-		return nil, err
+		return nil, exceptions.Exception{Err: errors.Wrap(err, err.Error()), StatusCode: 500}
 	}
 
 	return logEntries, nil
