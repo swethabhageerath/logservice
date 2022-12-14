@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -33,6 +34,7 @@ func NewHandlers(logServicer LogServicer, logger logger.ILogger) handlers {
 }
 
 func (h handlers) createHandler(w http.ResponseWriter, r *http.Request) models.StandardResponse {
+	fmt.Println("My Context:", r.Header.Get("RequestId"))
 	var request models.LogEntryRequest
 	json.NewDecoder(r.Body).Decode(&request)
 	if request == (models.LogEntryRequest{}) {
