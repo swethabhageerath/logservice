@@ -7,4 +7,4 @@ type Exception struct {
 
 func (e Exception) Error() string {
 	return e.Err.Error()
-}s
+}
